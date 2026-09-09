@@ -1,4 +1,5 @@
 import type { IAudioMetadata } from 'music-metadata'
+import type * as musicMetadataTypes from 'music-metadata'
 import { Buffer } from 'node:buffer'
 import { execFile } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
@@ -160,7 +161,18 @@ export const mediaMessageSHA256B64 = (message: WAMessageContent): string | null 
 
 /** Returns audio duration in seconds, parsed via `music-metadata`. */
 export async function getAudioDuration(buffer: Buffer | string | Readable) {
-	const musicMetadata = await import('music-metadata')
+	// `music-metadata` is an optional peer: without it the duration is simply
+	// unknown and the caller sends without `seconds`. The specifier cast keeps
+	// bundlers from failing the build when the peer is absent, the same trick
+	// `link-preview.ts` uses for `link-preview-js`. Only the import is
+	// guarded: parser failures still throw so the caller's warning reports
+	// corrupt audio instead of silently dropping the duration.
+	let musicMetadata: typeof musicMetadataTypes
+	try {
+		musicMetadata = await import('music-metadata' as string)
+	} catch {
+		return undefined
+	}
 	let metadata: IAudioMetadata
 	const options = {
 		duration: true
