@@ -963,7 +963,7 @@ describe('dispatch: undecryptable_message', () => {
 		expect(stub?.messageStubParameters).toEqual(['view_once'])
 	})
 
-	it("leaves messageStubParameters alone when the stanza has no unavailable type", () => {
+	it('leaves messageStubParameters alone when the stanza has no unavailable type', () => {
 		const upserts = collect(
 			{
 				type: 'undecryptable_message',
