@@ -619,17 +619,18 @@ const DISPATCHERS: DispatcherMap = {
 			messageTimestamp: evt.timestamp,
 			pushName: evt.pushName,
 			messageStubType: WAProto.WebMessageInfo.StubType.CIPHERTEXT,
-			// The envelope's `type` rides along with `unavailableType`. It is
-			// the only thing that survives a decryption failure to say what the
-			// message was — the server stamps it on the sender's outgoing
-			// stanza, in the clear — and dropping it here left a consumer with
-			// a placeholder it could not classify at all.
-			messageStubParameters: [evt.unavailableType, evt.stanzaType].filter(
-				(value): value is string => !!value
-			)
+			messageStubParameters: evt.unavailableType ? [evt.unavailableType] : []
 		}) as WAMessage
 		if (evt.participantAlt) stubMsg.key.participantAlt = evt.participantAlt
 		if (evt.remoteJidAlt) stubMsg.key.remoteJidAlt = evt.remoteJidAlt
+		// A field of its own, not a second slot in `messageStubParameters`:
+		// that array is positional, and two independently optional values in it
+		// cannot be told apart — a lone `"pay"` would sit where an
+		// unavailability reason used to. This is the one thing that survives a
+		// decryption failure to say what the message was (the server stamps it
+		// on the sender's own outgoing stanza, in the clear), so it is named
+		// rather than placed.
+		if (evt.stanzaType) stubMsg.stanzaType = evt.stanzaType
 		ctx.ev.emit('messages.upsert', { messages: [stubMsg], type: 'notify' })
 	},
 

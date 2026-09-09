@@ -958,10 +958,12 @@ describe('dispatch: undecryptable_message', () => {
 			},
 			'messages.upsert'
 		)
-		expect(upserts[0]?.messages[0]?.messageStubParameters).toEqual(['view_once', 'pay'])
+		const stub = upserts[0]?.messages[0]
+		expect(stub?.stanzaType).toBe('pay')
+		expect(stub?.messageStubParameters).toEqual(['view_once'])
 	})
 
-	it("carries the envelope's type when the stanza has no unavailable type", () => {
+	it("leaves messageStubParameters alone when the stanza has no unavailable type", () => {
 		const upserts = collect(
 			{
 				type: 'undecryptable_message',
@@ -974,7 +976,9 @@ describe('dispatch: undecryptable_message', () => {
 			},
 			'messages.upsert'
 		)
-		expect(upserts[0]?.messages[0]?.messageStubParameters).toEqual(['pay'])
+		const stub = upserts[0]?.messages[0]
+		expect(stub?.stanzaType).toBe('pay')
+		expect(stub?.messageStubParameters).toEqual([])
 	})
 
 	it("suppresses emission when decrypt_fail_mode is 'hide'", () => {
