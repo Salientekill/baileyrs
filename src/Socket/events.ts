@@ -619,7 +619,14 @@ const DISPATCHERS: DispatcherMap = {
 			messageTimestamp: evt.timestamp,
 			pushName: evt.pushName,
 			messageStubType: WAProto.WebMessageInfo.StubType.CIPHERTEXT,
-			messageStubParameters: evt.unavailableType ? [evt.unavailableType] : []
+			// The envelope's `type` rides along with `unavailableType`. It is
+			// the only thing that survives a decryption failure to say what the
+			// message was — the server stamps it on the sender's outgoing
+			// stanza, in the clear — and dropping it here left a consumer with
+			// a placeholder it could not classify at all.
+			messageStubParameters: [evt.unavailableType, evt.stanzaType].filter(
+				(value): value is string => !!value
+			)
 		}) as WAMessage
 		if (evt.participantAlt) stubMsg.key.participantAlt = evt.participantAlt
 		if (evt.remoteJidAlt) stubMsg.key.remoteJidAlt = evt.remoteJidAlt
